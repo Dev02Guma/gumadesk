@@ -219,11 +219,9 @@ class HomeController extends Controller
     }
 
     public function getFacturasCreditos(Request $request){
-        $mes = $request->input('mes');
-        $anno = $request->input('anno');
-        $ruta = $request->input('ruta');
+        $Factura = $request->input('Factura');
 
-        $query = "select * from PRODUCCION.dbo.iweb4_facturas_por_rutas where vendedor = '".$ruta."' and nYear = ".$anno." and nMes = ".$mes;
+        $query = "select * from PRODUCCION.dbo.iweb4_facturas_por_rutas where FACTURA =  '".$Factura."' ";
         
         $facturas = DB::connection('sqlsrv')->select($query);
         return response()->json($facturas);
@@ -253,14 +251,16 @@ class HomeController extends Controller
             $nota = $request->input('notaC');
             $factura = $request->input('factura');
             $articulo = $request->input('articulo');
-            $tipo = 0;
+            $tipo = 20;
             $resp = '';
 
-            $sql = "SELECT Lista FROM PRODUCCION.dbo.table_articulo_comisiones WHERE VENDEDOR = '".$ruta."'"." AND ARTICULO = '".$articulo."'";
+            $sql = "SELECT Lista FROM PRODUCCION.dbo.table_articulo_comisiones_dev WHERE VENDEDOR = '".$ruta."'"." AND ARTICULO = '".$articulo."'";
+            
             $query = DB::connection('sqlsrv')->select($sql);
 
             if(count($query) > 0){
                 $tipo = $query[0]->Lista;
+                $tipo = ($tipo='SKU_80') ? 80 : 20 ;
             }
             
             $consult = NotaCredito::where('FACTURA', $factura)->where('ARTICULO', $articulo)->where('NOTACREDITO', $nota)->get();
@@ -268,6 +268,8 @@ class HomeController extends Controller
             if(count($consult) > 0){
                 $tipo = 1;
             }
+
+            
 
             $nMonth = $request->input('fecha');
 
@@ -286,9 +288,9 @@ class HomeController extends Controller
             $nCredito->ANNO         =   $nYear;
             $nCredito->FECHAA       =   $request->input('fecha');
 
+     
             if($tipo == 0){
-                $resp = 'no';
-                
+                $resp = 'no';                
              }else if($tipo == 80 || $tipo == 20){
                 $nCredito->save();
                 $resp = 'ok';
